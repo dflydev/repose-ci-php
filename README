@@ -1,0 +1,11 @@
+CodeIgniter Library for Repose ORM for PHP
+http://code.google.com/p/repose-php/
+http://repose-php.org/
+
+
+Repose is an ORM tool for PHP. Similar to Hibernate and SQLAlchemy and inspired
+by Outlet, another ORM tool for PHP.
+
+CodeIgniter is a PHP Framework.
+
+This Library allows CodeIgniter developers to integrate Repose into their apps.
