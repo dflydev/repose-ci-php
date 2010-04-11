@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+
+<project name="repose-ci" default="default" basedir=".">
+
+    <taskdef name="dateproperty" classname="DatePropertyTask" />
+
+    <property file="build.properties" />
+
+    <import file="externalGitProject.xml"/>
+
+    <dateproperty name="snapshotVersion" format="YmdGis" />
+    
+    <property name="paths.build" value="${project.basedir}/build" />
+    <property name="paths.dist" value="${project.basedir}/dist" />
+
+    <property name="repose.repository.path" value="${paths.build}/repose-php-repo" />
+    <property name="repose-ci.repository.path" value="${paths.build}/repose-ci-php-repo" />
+    
+    <property name="repose.guessedVersionPropertyName" value="repose.guessedVersion" />
+    <property name="repose.guessedVersionPropertyFilename" value="${repose.repository.path}/.${repose.guessedVersionPropertyName}.properites" />
+    <property name="repose.sourceTypePropertyName" value="repose.sourceType" />
+    <property name="repose.sourceTypePropertyFilename" value="${repose.repository.path}/.${repose.sourceTypePropertyName}.properites" />
+    
+    <property name="repose-ci.guessedVersionPropertyName" value="repose-ci.guessedVersion" />
+    <property name="repose-ci.guessedVersionPropertyFilename" value="${repose-ci.repository.path}/.${repose-ci.guessedVersionPropertyName}.properites" />
+    <property name="repose-ci.sourceTypePropertyName" value="repose-ci.sourceType" />
+    <property name="repose-ci.sourceTypePropertyFilename" value="${repose-ci.repository.path}/.${repose-ci.sourceTypePropertyName}.properites" />
+    
+    <target name="setRepositoryDefaultProperties">
+    
+        <if>
+            <not><isset property="repose.tag" /></not>
+            <then><property name="repose.tag" value="" /></then>
+        </if>
+        <if>
+            <not><isset property="repose.branch" /></not>
+            <then><property name="repose.branch" value="" /></then>
+        </if>
+    
+        <if>
+            <not><isset property="repose-ci.tag" /></not>
+            <then><property name="repose-ci.tag" value="" /></then>
+        </if>
+        <if>
+            <not><isset property="repose-ci.branch" /></not>
+            <then><property name="repose-ci.branch" value="" /></then>
+        </if>
+
+    </target>
+    
+    <target name="setProperties" depends="version">
+        
+        <property name="repose-ci.basic.pkgname" value="repose-ci-${repose-ci.version}" />
+        <property name="repose-ci.basic.build.path" value="${paths.build}/${repose-ci.basic.pkgname}" />
+        <property name="repose-ci.basic.dist.zipfile" value="${paths.dist}/${repose-ci.basic.pkgname}.zip" />
+        <property name="repose-ci.basic.dist.tgzfile" value="${paths.dist}/${repose-ci.basic.pkgname}.tar.gz" />
+        
+        <property name="repose-ci.combined.pkgname" value="repose-ci-${repose-ci.version}-repose-${repose.version}" />
+        <property name="repose-ci.combined.build.path" value="${paths.build}/${repose-ci.combined.pkgname}" />
+        <property name="repose-ci.combined.dist.zipfile" value="${paths.dist}/${repose-ci.combined.pkgname}.zip" />
+        <property name="repose-ci.combined.dist.tgzfile" value="${paths.dist}/${repose-ci.combined.pkgname}.tar.gz" />
+        
+    </target>
+
+    <target name="assertClonedRepose" depends="setRepositoryDefaultProperties">
+        <phingcall target="externalGitProjectAssertClone">
+            <property name="repository.url" value="${repose.repository.url}" />
+            <property name="repository.path" value="${repose.repository.path}" />
+            <property name="repository.tag" value="${repose.tag}" />
+            <property name="repository.branch" value="${repose.branch}" />
+            <property name="guessedVersionPropertyName" value="${repose.guessedVersionPropertyName}" />
+            <property name="guessedVersionPropertyFilename" value="${repose.guessedVersionPropertyFilename}" />
+            <property name="sourceTypePropertyName" value="${repose.sourceTypePropertyName}" />
+            <property name="sourceTypePropertyFilename" value="${repose.sourceTypePropertyFilename}" />
+            <property name="snapshotVersion" value="${snapshotVersion}" />
+        </phingcall>
+    </target>
+
+    <target name="assertClonedReposeCi" depends="setRepositoryDefaultProperties">
+        <phingcall target="externalGitProjectAssertClone">
+            <property name="repository.url" value="${repose-ci.repository.url}" />
+            <property name="repository.path" value="${repose-ci.repository.path}" />
+            <property name="repository.tag" value="${repose-ci.tag}" />
+            <property name="repository.branch" value="${repose-ci.branch}" />
+            <property name="guessedVersionPropertyName" value="${repose-ci.guessedVersionPropertyName}" />
+            <property name="guessedVersionPropertyFilename" value="${repose-ci.guessedVersionPropertyFilename}" />
+            <property name="sourceTypePropertyName" value="${repose-ci.sourceTypePropertyName}" />
+            <property name="sourceTypePropertyFilename" value="${repose-ci.sourceTypePropertyFilename}" />
+            <property name="snapshotVersion" value="${snapshotVersion}" />
+        </phingcall>
+    </target>
+    
+    <target name="assertCloned" depends="assertClonedRepose,assertClonedReposeCi" />
+    <target name="assertReposeGuessedVersionPropertiesLoaded" depends="assertClonedRepose" />
+    <target name="assertReposeCiGuessedVersionPropertiesLoaded" depends="assertClonedReposeCi" />
+    
+    <target name="version">
+        <if>
+            <not><available file="${repose.guessedVersionPropertyFilename}" /></not>
+            <then><phingcall target="assertReposeGuessedVersionPropertiesLoaded" /></then>
+        </if>
+        <property file="${repose.guessedVersionPropertyFilename}" />
+        <property file="${repose.sourceTypePropertyFilename}" />
+        <if>
+            <not><available file="${repose-ci.guessedVersionPropertyFilename}" /></not>
+            <then><phingcall target="assertReposeCiGuessedVersionPropertiesLoaded" /></then>
+        </if>
+        <property file="${repose-ci.guessedVersionPropertyFilename}" />
+        <property file="${repose-ci.sourceTypePropertyFilename}" />
+    </target>
+
+    <target name="pull" depends="version">
+        <echo message="Type: ${repose.sourceType}" />
+        <if>
+            <equals arg1="${repose.sourceType}" arg2="branch" />
+            <then>
+		        <phingcall target="externalGitProjectPull">
+		            <property name="repository.path" value="${repose.repository.path}" />
+		        </phingcall>
+            </then>
+            <else>
+                <echo>Skipping pulling Repose because it appears to be a tag</echo>
+            </else>
+        </if>
+        <if>
+            <equals arg1="${repose-ci.sourceType}" arg2="branch" />
+            <then>
+		        <phingcall target="externalGitProjectPull">
+		            <property name="repository.path" value="${repose-ci.repository.path}" />
+		        </phingcall>
+		    </then>
+            <else>
+                <echo>Skipping pulling Repose CodeIgniter because it appears to be a tag</echo>
+            </else>
+		</if>
+    </target>
+    
+    <target name="default">
+        <echo>Repose PHP ORM CodeIgniter Library Packager</echo>
+    </target>
+
+</project>

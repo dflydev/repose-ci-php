@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+
+<project name="externalProject" default="default" basedir=".">
+
+    <taskdef name="gitclone" classname="GitCloneTask" />
+    <taskdef name="gitcheckout" classname="GitCheckoutTask" />
+    <taskdef name="gitpull" classname="GitPullTask" />
+
+    <target name="externalGitProjectAssertClone">
+        <gitclone repo="${repository.url}" path="${repository.path}" />
+        <if>
+            <and>
+                <isset property="repository.tag" />
+                <not><equals arg1="${repository.tag}" arg2="" /></not>
+            </and>
+            <then>
+                <!-- Checkout the tag -->
+                <gitcheckout tag="${repository.tag}" path="${repository.path}" />
+                <property name="guessedVersion" value="${repository.tag}" />
+                <property name="repository.source.type" value="tag" />
+            </then>
+            <else>
+                <if>
+	                <or>
+	                    <not><isset property="repository.branch" /></not>
+	                    <equals arg1="${repository.branch}" arg2="" />
+	                </or>
+                    <then>
+                        <property name="repository.selectedBranch" value="master" />
+                    </then>
+                    <else>
+                        <property name="repository.selectedBranch" value="${repository.branch}" />
+                    </else>
+                </if>
+                <if>
+                    <equals arg1="${repository.selectedBranch}" arg2="master" />
+                    <then>
+                        <property name="guessedVersion" value="snapshot-${snapshotVersion}" />
+                    </then>
+                    <else>
+                        <property name="guessedVersion" value="${repository.selectedBranch}-snapshot-${snapshotVersion}" />
+                    </else>
+                </if>
+                <!-- Checkout the branch -->
+                <gitcheckout branch="${repository.selectedBranch}" path="${repository.path}" />
+                <property name="repository.source.type" value="branch" />
+            </else>
+        </if>
+        <echo message="${guessedVersionPropertyName}=${guessedVersion}" file="${guessedVersionPropertyFilename}" />
+        <echo message="${sourceTypePropertyName}=${repository.source.type}" file="${sourceTypePropertyFilename}" />
+    </target>
+    
+    <target name="externalGitProjectPull">
+        <gitpull path="${repository.path}" />
+    </target>
+
+</project>
