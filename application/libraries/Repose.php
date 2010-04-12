@@ -19,6 +19,7 @@ if ( ! class_exists('dd_ci_VendorLibs') ) {
     set_include_path(implode(PATH_SEPARATOR, $newPaths));
 }
 
+require_once('repose_AbstractSessionFactory.php');
 require_once('repose_Mapping.php');
 require_once('repose_AbstractSqlEngine.php');
 require_once('repose_Session.php');
@@ -28,7 +29,7 @@ require_once('repose_PathAutoloader.php');
  * Repose library
  * @package repose_ci
  */
-class Repose {
+class Repose extends repose_AbstractSessionFactory {
     
     /**
      * Engine
@@ -74,8 +75,6 @@ class Repose {
             );
         }
         
-        $this->currentSession = $this->openSession();
-        
     }
 
 
@@ -84,7 +83,7 @@ class Repose {
      * @return repose_Session
      */
     public function session() {
-        return $this->currentSession;
+        return $this->currentSession();
     }
     
     /**
