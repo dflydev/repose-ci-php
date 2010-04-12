@@ -62,6 +62,12 @@ class Repose extends repose_AbstractSessionFactory {
         
         $config->load('repose');
         
+        if ( ! $config->item('repose_model_libs') ) {
+            // If the location for the model libs has not been specified
+            // we will use the default location.
+            $config->set_item('repose_model_libs', APPPATH . 'repose-models');
+        }
+        
         $this->engine = new repose_ci_DbEngine($CI->db);
         $this->mapping = new repose_Mapping();
         $this->autoloader = new repose_PathAutoloader($config->item('repose_model_libs'));
