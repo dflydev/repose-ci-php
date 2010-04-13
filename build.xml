@@ -25,7 +25,26 @@
     <property name="repose-ci.guessedVersionPropertyFilename" value="${repose-ci.repository.path}/.${repose-ci.guessedVersionPropertyName}.properites" />
     <property name="repose-ci.sourceTypePropertyName" value="repose-ci.sourceType" />
     <property name="repose-ci.sourceTypePropertyFilename" value="${repose-ci.repository.path}/.${repose-ci.sourceTypePropertyName}.properites" />
+
+    <fileset dir="${repose-ci.repository.path}" id="repose-ci-application">
+        <include name="application/**" />
+    </fileset>
     
+    <fileset dir="${repose-ci.repository.path}" id="repose-ci-misc">
+        <include name="README" />
+        <include name="LICENSE" />
+    </fileset>
+    
+    <fileset dir="${repose.repository.path}/lib" id="repose-libs">
+        <include name="*.php" />
+        <include name="*.inc" />
+    </fileset>
+    
+    <fileset dir="${repose.repository.path}" id="repose-misc">
+        <include name="README" />
+        <include name="LICENSE" />
+    </fileset>
+        
     <target name="setRepositoryDefaultProperties">
     
         <if>
@@ -63,31 +82,43 @@
     </target>
 
     <target name="assertClonedRepose" depends="setRepositoryDefaultProperties">
-        <phingcall target="externalGitProjectAssertClone">
-            <property name="repository.url" value="${repose.repository.url}" />
-            <property name="repository.path" value="${repose.repository.path}" />
-            <property name="repository.tag" value="${repose.tag}" />
-            <property name="repository.branch" value="${repose.branch}" />
-            <property name="guessedVersionPropertyName" value="${repose.guessedVersionPropertyName}" />
-            <property name="guessedVersionPropertyFilename" value="${repose.guessedVersionPropertyFilename}" />
-            <property name="sourceTypePropertyName" value="${repose.sourceTypePropertyName}" />
-            <property name="sourceTypePropertyFilename" value="${repose.sourceTypePropertyFilename}" />
-            <property name="snapshotVersion" value="${snapshotVersion}" />
-        </phingcall>
+        <if>
+            <not><isset property="assertClonedReposeCalled" /></not>
+            <then>
+		        <property name="assertClonedReposeCalled" value="true" />
+		        <phingcall target="externalGitProjectAssertClone">
+		            <property name="repository.url" value="${repose.repository.url}" />
+		            <property name="repository.path" value="${repose.repository.path}" />
+		            <property name="repository.tag" value="${repose.tag}" />
+		            <property name="repository.branch" value="${repose.branch}" />
+		            <property name="guessedVersionPropertyName" value="${repose.guessedVersionPropertyName}" />
+		            <property name="guessedVersionPropertyFilename" value="${repose.guessedVersionPropertyFilename}" />
+		            <property name="sourceTypePropertyName" value="${repose.sourceTypePropertyName}" />
+		            <property name="sourceTypePropertyFilename" value="${repose.sourceTypePropertyFilename}" />
+		            <property name="snapshotVersion" value="${snapshotVersion}" />
+		        </phingcall>
+		    </then>
+		</if>
     </target>
 
     <target name="assertClonedReposeCi" depends="setRepositoryDefaultProperties">
-        <phingcall target="externalGitProjectAssertClone">
-            <property name="repository.url" value="${repose-ci.repository.url}" />
-            <property name="repository.path" value="${repose-ci.repository.path}" />
-            <property name="repository.tag" value="${repose-ci.tag}" />
-            <property name="repository.branch" value="${repose-ci.branch}" />
-            <property name="guessedVersionPropertyName" value="${repose-ci.guessedVersionPropertyName}" />
-            <property name="guessedVersionPropertyFilename" value="${repose-ci.guessedVersionPropertyFilename}" />
-            <property name="sourceTypePropertyName" value="${repose-ci.sourceTypePropertyName}" />
-            <property name="sourceTypePropertyFilename" value="${repose-ci.sourceTypePropertyFilename}" />
-            <property name="snapshotVersion" value="${snapshotVersion}" />
-        </phingcall>
+        <if>
+            <not><isset property="assertClonedReposeCiCalled" /></not>
+            <then>
+		        <property name="assertClonedReposeCiCalled" value="true" />
+		        <phingcall target="externalGitProjectAssertClone">
+		            <property name="repository.url" value="${repose-ci.repository.url}" />
+		            <property name="repository.path" value="${repose-ci.repository.path}" />
+		            <property name="repository.tag" value="${repose-ci.tag}" />
+		            <property name="repository.branch" value="${repose-ci.branch}" />
+		            <property name="guessedVersionPropertyName" value="${repose-ci.guessedVersionPropertyName}" />
+		            <property name="guessedVersionPropertyFilename" value="${repose-ci.guessedVersionPropertyFilename}" />
+		            <property name="sourceTypePropertyName" value="${repose-ci.sourceTypePropertyName}" />
+		            <property name="sourceTypePropertyFilename" value="${repose-ci.sourceTypePropertyFilename}" />
+		            <property name="snapshotVersion" value="${snapshotVersion}" />
+		        </phingcall>
+            </then>
+        </if>
     </target>
     
     <target name="assertCloned" depends="assertClonedRepose,assertClonedReposeCi" />
@@ -96,21 +127,39 @@
     
     <target name="version">
         <if>
-            <not><available file="${repose.guessedVersionPropertyFilename}" /></not>
-            <then><phingcall target="assertReposeGuessedVersionPropertiesLoaded" /></then>
+            <not>
+                <isset property="version.isset" />
+            </not>
+            <then>
+                <property name="version.isset" value="true" />
+		        <if>
+		            <not><available file="${repose.guessedVersionPropertyFilename}" /></not>
+		            <then><phingcall target="assertReposeGuessedVersionPropertiesLoaded" /></then>
+		        </if>
+		        <property file="${repose.guessedVersionPropertyFilename}" />
+		        <property file="${repose.sourceTypePropertyFilename}" />
+		        <if>
+		            <not><available file="${repose-ci.guessedVersionPropertyFilename}" /></not>
+		            <then><phingcall target="assertReposeCiGuessedVersionPropertiesLoaded" /></then>
+		        </if>
+		        <property file="${repose-ci.guessedVersionPropertyFilename}" />
+		        <property file="${repose-ci.sourceTypePropertyFilename}" />
+                <if>
+                    <not><isset property="repose.version" /></not>
+                    <then><property name="repose.version" value="${repose.guessedVersion}" /></then>
+                </if>
+                <if>
+                    <not><isset property="repose-ci.version" /></not>
+                    <then><property name="repose-ci.version" value="${repose-ci.guessedVersion}" /></then>
+                </if>
+            </then>
         </if>
-        <property file="${repose.guessedVersionPropertyFilename}" />
-        <property file="${repose.sourceTypePropertyFilename}" />
-        <if>
-            <not><available file="${repose-ci.guessedVersionPropertyFilename}" /></not>
-            <then><phingcall target="assertReposeCiGuessedVersionPropertiesLoaded" /></then>
-        </if>
-        <property file="${repose-ci.guessedVersionPropertyFilename}" />
-        <property file="${repose-ci.sourceTypePropertyFilename}" />
     </target>
 
     <target name="pull" depends="version">
-        <echo message="Type: ${repose.sourceType}" />
+        <!-- NOTE This doesn't do what is expected if branches or tags
+             are specified.
+             -->
         <if>
             <equals arg1="${repose.sourceType}" arg2="branch" />
             <then>
@@ -135,8 +184,89 @@
 		</if>
     </target>
     
+    <target name="buildBasic" depends="setProperties">
+        <copy toDir="${repose-ci.basic.build.path}" mode="0755">
+            <fileset refid="repose-ci-application" />
+            <fileset refid="repose-ci-misc" />
+        </copy>
+        <chmod mode="0755">
+            <fileset dir="${repose-ci.basic.build.path}">
+                <include name="**/**" />
+            </fileset>
+        </chmod>
+    </target>
+
+    <target name="buildCombined" depends="setProperties">
+        <copy toDir="${repose-ci.combined.build.path}" mode="0755">
+            <fileset refid="repose-ci-application" />
+            <fileset refid="repose-ci-misc" />
+        </copy>
+        <copy toDir="${repose-ci.combined.build.path}/application/vendors/repose" mode="0755">
+            <fileset refid="repose-libs"/>
+            <fileset refid="repose-misc"/>
+        </copy>
+        <echo message="" file="${repose-ci.combined.build.path}/application/vendors/repose/index.html" />
+        <chmod mode="0755">
+            <fileset dir="${repose-ci.combined.build.path}">
+                <include name="**/**" />
+            </fileset>
+        </chmod>
+    </target>
+    
+    <target name="distBasic" depends="buildBasic">
+
+        <mkdir dir="${paths.dist}" />
+
+        <delete file="${repose-ci.basic.dist.tgzfile}" />
+        <tar compression="gzip" destFile="${repose-ci.basic.dist.tgzfile}" basedir="${repose-ci.basic.build.path}" prefix="${repose-ci.basic.pkgname}" />
+
+        <delete file="${repose-ci.basic.dist.zipfile}" />
+        <zip destFile="${repose-ci.basic.dist.zipfile}" basedir="${repose-ci.basic.build.path}" prefix="${repose-ci.basic.pkgname}/" />
+        
+    </target>
+    
+    <target name="distCombined" depends="buildCombined">
+
+        <mkdir dir="${paths.dist}" />
+
+        <delete file="${repose-ci.combined.dist.tgzfile}" />
+        <tar compression="gzip" destFile="${repose-ci.combined.dist.tgzfile}" basedir="${repose-ci.combined.build.path}" prefix="${repose-ci.combined.pkgname}" />
+
+        <delete file="${repose-ci.combined.dist.zipfile}" />
+        <zip destFile="${repose-ci.combined.dist.zipfile}" basedir="${repose-ci.combined.build.path}" prefix="${repose-ci.combined.pkgname}/" />
+
+    </target>
+    
+    <target name="update" depends="assertCloned,pull" />
+    <target name="rebuild" depends="update,build,dist" />
+    <target name="build" depends="version,buildBasic,buildCombined" />
+    <target name="dist" depends="distBasic,distCombined" />
+    <target name="publish">
+        <echo>TODO: Publish</echo>
+    </target>
+    <target name="all" depends="rebuild,publish" />
+
     <target name="default">
         <echo>Repose PHP ORM CodeIgniter Library Packager</echo>
+        <echo />
+        <echo>Targets:</echo>
+        <echo>    rebuild - Updates repository, builds and dists</echo>
+        <echo>    update - Updates repository</echo>
+        <echo>    build - Builds packages</echo>
+        <echo>    dist - Creates distribution archives</echo>
+        <echo>    publish - Publish distribution archives</echo>
+        <echo>    all - Rebuild and publish</echo>
+        <echo />
+        <echo>Properties:</echo>
+        <echo>    repose.tag - Repose tag to use</echo>
+        <echo>    repose.branch - Repose branch to use</echo>
+        <echo>    repose.version - Repose version to use</echo>
+        <echo>    repose.repository.url - URL for Repose Git Repository</echo>
+        <echo />
+        <echo>    repose-ci.tag - Repose CI tag to use</echo>
+        <echo>    repose-ci.branch - Repose CI branch to use</echo>
+        <echo>    repose-ci.version - Repose CI version to use</echo>
+        <echo>    repose-ci.repository.url - URL for Repose CI Git Repository</echo>
     </target>
 
 </project>

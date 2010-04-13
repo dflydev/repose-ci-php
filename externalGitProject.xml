@@ -4,6 +4,7 @@
 
     <taskdef name="gitclone" classname="GitCloneTask" />
     <taskdef name="gitcheckout" classname="GitCheckoutTask" />
+    <taskdef name="gitfetch" classname="GitFetchTask" />
     <taskdef name="gitpull" classname="GitPullTask" />
 
     <target name="externalGitProjectAssertClone">
