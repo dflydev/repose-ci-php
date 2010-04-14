@@ -173,7 +173,7 @@ $config['directory_trigger'] 	= 'd'; // experimental not currently in use
 | your log files will fill up very fast.
 |
 */
-$config['log_threshold'] = 0;
+$config['log_threshold'] = 4;
 
 /*
 |--------------------------------------------------------------------------
@@ -324,6 +324,9 @@ $config['rewrite_short_tags'] = FALSE;
 */
 $config['proxy_ips'] = '';
 
+// Include site-specific configuration if it exists.
+$siteConfig = APPPATH.'config/config_site'.EXT;
+if ( file_exists($siteConfig) ) include($siteConfig);
 
 /* End of file config.php */
 /* Location: ./system/application/config/config.php */
