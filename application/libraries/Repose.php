@@ -108,7 +108,7 @@ class Repose extends repose_AbstractSessionFactory {
      * Load a model class
      * @param string $clazz Model class to load
      */
-    public function loadModel($clazz) {
+    public function loadClass($clazz) {
         $this->autoloader->loadClass($clazz);
     }
 
