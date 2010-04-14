@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+
+<project name="repose-ci" default="default" basedir=".">
+
+    <taskdef name="gitclone" classname="GitCloneTask" />
+    <taskdef name="gitcheckout" classname="GitCheckoutTask" />
+    <taskdef name="gitfetch" classname="GitFetchTask" />
+    <taskdef name="gitpull" classname="GitPullTask" />
+    
+    <property name="paths.build" value="${project.basedir}/build" />
+    <property name="ci.system.root" value="${project.basedir}/CodeIgniter_1.7.2/system/" />
+    
+    <property name="repose.repository.url" value="git@github.com:dflydev/repose-php.git" />
+    <property name="repose.repository.path" value="${paths.build}/repose-php" />
+    <if><not><isset property="repose.branch" /></not><then><property name="repose.branch" value="master" /></then></if>
+
+    <property name="repose-ci.repository.url" value="git@github.com:dflydev/repose-ci-php.git" />
+    <property name="repose-ci.repository.path" value="${paths.build}/repose-ci-php" />
+    <if><not><isset property="repose-ci.branch" /></not><then><property name="repose-ci.branch" value="master" /></then></if>
+    
+    
+    <target name="updateRepose">
+        <if>
+            <available file="${repose.repository.path}" type="dir" />
+            <then>
+                <!-- Fetch if already available. Get tags! -->
+                <gitfetch path="${repose.repository.path}" tags="true" />
+            </then>
+            <else>
+                <!-- Otherwise we should clone. -->
+                <gitclone repo="${repose.repository.url}" path="${repose.repository.path}" />
+            </else>
+        </if>
+        <if>
+            <isset property="repose.tag" />
+            <then>
+                <gitcheckout path="${repose.repository.path}" tag="${repose.tag}" />
+            </then>
+            <else>
+                <gitcheckout path="${repose.repository.path}" branch="${repose.branch}" />
+                <gitpull path="${repose.repository.path}" />
+            </else>
+        </if>
+    </target>
+
+    <target name="updateReposeCi">
+        <if>
+            <available file="${repose-ci.repository.path}" type="dir" />
+            <then>
+                <!-- Fetch if already available. Get tags! -->
+                <gitfetch path="${repose-ci.repository.path}" tags="true" />
+            </then>
+            <else>
+                <!-- Otherwise we should clone. -->
+                <gitclone repo="${repose-ci.repository.url}" path="${repose-ci.repository.path}" />
+            </else>
+        </if>
+        <if>
+            <isset property="repose-ci.tag" />
+            <then>
+                <gitcheckout path="${repose-ci.repository.path}" tag="${repose-ci.tag}" />
+            </then>
+            <else>
+                <gitcheckout path="${repose-ci.repository.path}" branch="${repose-ci.branch}" />
+                <gitpull path="${repose-ci.repository.path}" />
+            </else>
+        </if>
+    </target>
+    
+    <target name="deployRepose">
+        <copy toDir="${ci.system.root}/application/vendors/repose" mode="0755">
+            <fileset dir="${repose.repository.path}/lib">
+                <include name="*.php" />
+                <include name="*.inc" />
+            </fileset>
+            <fileset dir="${repose.repository.path}">
+                <include name="README" />
+                <include name="LICENSE" />
+            </fileset>
+        </copy>
+    </target>
+    
+    <target name="deployReposeCi">
+        <copy toDir="${ci.system.root}" mode="0755">
+            <fileset dir="${repose-ci.repository.path}">
+                <include name="application/**/**" />
+                <exclude name="application/config/repose.php" />
+            </fileset>
+        </copy>
+    </target>
+    
+    <target name="update" depends="updateRepose,updateReposeCi,deployRepose,deployReposeCi" />
+
+    <target name="default">
+        <echo>Repose PHP ORM CodeIgniter Library Demo</echo>
+        <echo />
+        <echo>Targets:</echo>
+        <echo>    update - Updates repository</echo>
+        <echo />
+        <echo>Properties:</echo>
+        <echo>    repose.tag - Repose tag to use</echo>
+        <echo>    repose.branch - Repose branch to use</echo>
+        <echo>    repose.repository.url - URL for Repose Git Repository</echo>
+        <echo />
+        <echo>    repose-ci.tag - Repose CI tag to use</echo>
+        <echo>    repose-ci.branch - Repose CI branch to use</echo>
+        <echo>    repose-ci.repository.url - URL for Repose CI Git Repository</echo>
+    </target>
+
+</project>
