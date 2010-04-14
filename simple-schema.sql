@@ -1,7 +1,7 @@
-CREATE TABLE bug (
-  bugId bigint(20) unsigned NOT NULL auto_increment,
+CREATE TABLE blog (
+  blogId bigint(20) unsigned NOT NULL auto_increment,
   name varchar(255),
-  primary key (bugId)
+  primary key (blogId)
 );
 
 CREATE TABLE category (
