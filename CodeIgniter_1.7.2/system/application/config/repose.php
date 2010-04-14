@@ -67,7 +67,8 @@ $config['repose_mapping'] = array(
         'tableName' => 'category',
         'properties' => array(
             'categoryId' => array( 'primaryKey' => 'true'),
-            'name' => null,
+            'title' => null,
+            'body' => null,
             'blog' => array(
                 'relationship' => 'many-to-one',
                 'className' => 'demo_Blog',

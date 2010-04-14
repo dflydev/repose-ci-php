@@ -50,6 +50,9 @@ $db['default']['cachedir'] = "";
 $db['default']['char_set'] = "utf8";
 $db['default']['dbcollat'] = "utf8_general_ci";
 
+// Include site-specific database configuration if it exists.
+$siteConfig = APPPATH.'config/database_site'.EXT;
+if ( file_exists($siteConfig) ) include($siteConfig);
 
 /* End of file database.php */
 /* Location: ./system/application/config/database.php */
