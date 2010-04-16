@@ -68,7 +68,7 @@
     </target>
     
     <target name="deployRepose">
-        <copy toDir="${ci.system.root}/application/vendors/repose" mode="0755">
+        <copy toDir="${ci.system.root}/application/vendors/repose" mode="0755" overwrite="true">
             <fileset dir="${repose.repository.path}/lib">
                 <include name="*.php" />
                 <include name="*.inc" />
@@ -81,7 +81,7 @@
     </target>
     
     <target name="deployReposeCi">
-        <copy toDir="${ci.system.root}" mode="0755">
+        <copy toDir="${ci.system.root}" mode="0755" overwrite="true">
             <fileset dir="${repose-ci.repository.path}">
                 <include name="application/**/**" />
                 <exclude name="application/config/repose.php" />

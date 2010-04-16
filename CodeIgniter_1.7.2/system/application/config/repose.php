@@ -64,9 +64,9 @@ $config['repose_mapping'] = array(
     ),
 
     'demo_Post' => array(
-        'tableName' => 'category',
+        'tableName' => 'post',
         'properties' => array(
-            'categoryId' => array( 'primaryKey' => 'true'),
+            'postId' => array( 'primaryKey' => 'true'),
             'title' => null,
             'body' => null,
             'blog' => array(
