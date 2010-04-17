@@ -30,6 +30,26 @@ $config['repose_mapping'] = array(
         'properties' => array(
             'postId' => array( 'primaryKey' => 'true'),
             'title' => null,
+            'body' => null,
+            'comments' => array(
+                'relationship' => 'one-to-many',
+                'className' => 'demo_Comment',
+                'backref' => 'post',
+                'cascade' => 'delete-orphan',
+            ),
+        ),
+    ),
+
+    'demo_Comment' => array(
+        'tableName' => 'comment',
+        'properties' => array(
+            'commentId' => array( 'primaryKey' => 'true'),
+            'post' => array(
+                'relationship' => 'many-to-one',
+                'className' => 'demo_Post',
+            ),
+            'name' => null,
+            'body' => null,
         ),
     ),
     
