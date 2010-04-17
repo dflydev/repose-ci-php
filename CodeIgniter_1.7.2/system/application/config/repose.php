@@ -25,58 +25,11 @@
  */
 $config['repose_mapping'] = array(
 
-    'demo_Blog' => array(
-        'tableName' => 'blog',
-        'properties' => array(
-            'blogId' => array( 'primaryKey' => 'true'),
-            'name' => null,
-            'categories' => array(
-                'relationship' => 'one-to-many',
-                'className' => 'demo_Category',
-                'backref' => 'blog',
-                'cascade' => 'delete-orphan',
-            ),
-            'posts' => array(
-                'relationship' => 'one-to-many',
-                'className' => 'demo_Post',
-                'backref' => 'blog',
-                'cascade' => 'delete-orphan',
-            ),
-        ),
-    ),
-
-    'demo_Category' => array(
-        'tableName' => 'category',
-        'properties' => array(
-            'categoryId' => array( 'primaryKey' => 'true'),
-            'name' => null,
-            'blog' => array(
-                'relationship' => 'many-to-one',
-                'className' => 'demo_Blog',
-            ),
-            'posts' => array(
-                'relationship' => 'one-to-many',
-                'className' => 'demo_Post',
-                'backref' => 'category',
-                'cascade' => 'delete-orphan',
-            ),
-        ),
-    ),
-
     'demo_Post' => array(
         'tableName' => 'post',
         'properties' => array(
             'postId' => array( 'primaryKey' => 'true'),
             'title' => null,
-            'body' => null,
-            'blog' => array(
-                'relationship' => 'many-to-one',
-                'className' => 'demo_Blog',
-            ),
-            'category' => array(
-                'relationship' => 'many-to-one',
-                'className' => 'demo_Category',
-            ),
         ),
     ),
     
