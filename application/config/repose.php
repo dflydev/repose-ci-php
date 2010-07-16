@@ -12,6 +12,18 @@
  */
 //$config['repose_model_libs'] = APPPATH . 'repose-models';
 
+/**
+ * Repose PDO connection
+ * 
+ * Used in the event that a direct PDO connection is better suited for the
+ * task than the built in CodeIgniter DB. For example, connecting to a
+ * sqlite3 database.
+ */
+//$config['repose_pdo_connection'] = array(
+//    'dsn' => '',
+//    'username' => '',
+//    'password' => '',
+//);
 
 /**
  * Repose mapping
@@ -24,7 +36,7 @@
  * live at application/repose-models/sample_Project.php
  */
 $config['repose_mapping'] = array(
-
+    
     // 
     // Example mapping:
     //
