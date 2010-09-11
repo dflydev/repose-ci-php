@@ -56,8 +56,6 @@ class Repose extends repose_AbstractSessionFactory {
         
         $CI =& get_instance();
         
-        $CI->load->database();
-        
         $config = $CI->config;
         
         $config->load('repose');
@@ -82,6 +80,7 @@ class Repose extends repose_AbstractSessionFactory {
             );
             $this->engine = new repose_PdoEngine($pdo);
         } else {
+            $CI->load->database();
             $this->engine = new repose_ci_DbEngine($CI->db);
         }
         $this->mapping = new repose_Mapping();
