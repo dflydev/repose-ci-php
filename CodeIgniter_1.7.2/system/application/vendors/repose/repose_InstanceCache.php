@@ -263,12 +263,23 @@ class repose_InstanceCache {
     /**
      * Flush instances.
      */
-    public function flush() {
+    public function flush($pass = 0) {
+        $flushedAtLeastOne = false;
         foreach ( $this->proxies as $id => $proxy ) {
             if ( $proxy->___repose_isDeleted() or ( ! $proxy->___repose_isPersisted() ) or $proxy->___repose_isDirty() ) {
-                $proxy->___repose_flush();
+                if ( ! $proxy->___repose_isReallyDeleted() ) {
+                    $proxy->___repose_flush();
+                    $flushedAtLeastOne = true;
+                }
             }
         }
+        if ( $flushedAtLeastOne ) {
+            if ( $pass > 10 ) {
+                throw new Exception('Repose flush() potentially going into deep recursion.');
+            }
+            $this->flush($pass + 1);
+        }
+        //print ' [finished flush pass ' . $pass . ']' . "\n";
     }
 
     /**
@@ -328,7 +339,7 @@ class repose_InstanceCache {
         // the backref for the referrer. If they match, we should assert that
         // the referrer is added to our referree's collection.
         foreach ( $referree->___repose_getProperties() as $referreeProperty ) {
-            if ( $referreeProperty->backref() == $property->name() ) {
+            if ( $referreeProperty->backref($this->session->mapping()) == $property->name() ) {
                 $collection = $referree->___repose_propertyGetter($referreeProperty->name());
                 $collection->___repose_assertAdded($referrer);
             }
@@ -343,11 +354,17 @@ class repose_InstanceCache {
      * @param repose_IProxy $referree Referree
      */
     public function pruneRelationship($referree) {
+        // TODO Verify that this is enough to handle collection relationships
+        // as well. If not, this is probably where we might want to do this.
         $referreeId = $referree->___repose_id();
         if ( isset($this->referrerMap[$referreeId]) ) {
             foreach ( $this->referrerMap[$referreeId] as $referrerId => $properties ) {
                 $referrer = $this->proxies[$referrerId];
                 foreach ( $properties as $propertyName => $dummy ) {
+                    // TODO We should check here to see whether or not
+                    // we want to delete the referrer instead of simply
+                    // setting the relationship to null and also to throw
+                    // an exception/fail if this should not be allowed.
                     $referrer->___repose_propertySetter(
                         $propertyName,
                         null
@@ -356,7 +373,6 @@ class repose_InstanceCache {
                 }
             }
         }
-
     }
 
     /**

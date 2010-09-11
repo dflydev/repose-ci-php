@@ -45,6 +45,12 @@ class repose_MappedClassProperty {
      * @var bool
      */
     protected $isPrimaryKey;
+    
+    /**
+     * Name of generator
+     * @var string
+     */
+    protected $generator;
 
     /**
      * Class name
@@ -69,6 +75,12 @@ class repose_MappedClassProperty {
      * @var string
      */
     protected $cascade;
+    
+    /**
+     * Is collection lazy loaded?
+     * @var unknown_type
+     */
+    protected $isLazy;
 
     /**
      * Constructor
@@ -76,6 +88,9 @@ class repose_MappedClassProperty {
      * @param array $config Configuration
      */
     public function __construct($name, $config = array()) {
+        if ( $config and ! is_array($config) ) {
+            $config = array('columnName'=>$config);
+        }
         $this->name = $name;
         $this->type = isset($config['relationship']) ?
             $config['relationship'] : 'property';
@@ -113,6 +128,31 @@ class repose_MappedClassProperty {
         $this->foreignKey = isset($config['foreignKey']) ? $config['foreignKey'] : null;
         $this->backref = isset($config['backref']) ? $config['backref'] : null;
         $this->cascade = isset($config['cascade']) ? $config['cascade'] : 'none';
+        if ( ! isset($config['generator']) ) {
+            $config['generator'] = 'auto';
+        }
+        if ( is_object($config['generator']) ) {
+            $this->generator = $config['generator'];
+        } else {
+            switch($config['generator']) {
+                case 'assigned':
+                case 'auto':
+                case 'uuid':
+                    $generatorClazz = 'repose_' . ucfirst($config['generator']) . 'PropertyGenerator';
+                    require_once($generatorClazz . '.php');
+                    $this->generator = new $generatorClazz();
+                    break;
+                default:
+                    $generatorClazz = $config['generator'];
+                    if ( ! class_exists($generatorClazz) ) {
+                        die("Generator class $generatorClazz not loaded. Was it required?");
+                    }
+                    $this->generator = new $generatorClazz();
+                    break;
+            }
+        }
+        $this->isLazy = true;
+        if ( isset($config['lazy']) and ! $config['lazy'] ) { $this->isLazy = false; }
     }
 
     /**
@@ -170,6 +210,14 @@ class repose_MappedClassProperty {
     public function isPrimaryKey() {
         return $this->isPrimaryKey;
     }
+    
+    /**
+     * Generator
+     * @return string
+     */
+    public function generator() {
+        return $this->generator;
+    }
 
     /**
      * Class name
@@ -207,18 +255,27 @@ class repose_MappedClassProperty {
 
     /**
      * Backref
+     * @param repose_Mapping $mapping Mapping
      * @return string
      */
-    public function backref() {
-        return $this->backref;
+    public function backref(repose_Mapping $mapping = null) {
+        return $this->deriveColumnName($mapping, 'backref');
     }
-
+    
     /**
      * Cascade
      * @return string
      */
     public function cascade() {
         return $this->cascade;
+    }
+    
+    /**
+     * Is colleciton lazy?
+     * @return bool
+     */
+    public function isLazy() {
+        return $this->isLazy;
     }
 
     /**

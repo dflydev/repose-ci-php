@@ -73,7 +73,13 @@ class PROXY_TEMPLATE__ReposeProxy__ extends PROXY_TEMPLATE implements repose_IPr
      * @var bool
      */
     private $___repose_isDeleted;
-
+    
+    /**
+     * Is really deleted?
+     * @var bool
+     */
+    private $___repose_isReallyDeleted;
+    
     /**
      * Are we flushing?
      * @var bool
@@ -106,6 +112,24 @@ class PROXY_TEMPLATE__ReposeProxy__ extends PROXY_TEMPLATE implements repose_IPr
         $this->___repose_populateInstanceFromData($data);
         $this->___repose_populateHistoryFromInstance();
         $this->___repose_isDeleted = false;
+        $this->___repose_isReallyDeleted = false;
+        $clazz = $this->___repose_clazz;
+
+        $primaryKey = $this->___repose_primaryKey();
+        $primaryKeyProperty = $primaryKey->isComposite() ? null : $primaryKey->property();
+
+        if ( $primaryKeyProperty !== null ) {
+            $name = $primaryKeyProperty->name();
+            if ( $primaryKeyProperty->generator()->shouldGenerateOnAdd() ) {
+                $this->___repose_propertySetter($name, $primaryKeyProperty->generator()->generate(
+                    $this->___repose_session(),
+                    $this->___repose_mappedClass(),
+                    $primaryKeyProperty,
+                    $this
+                ));
+            }
+        }
+        
     }
 
     /**
@@ -147,7 +171,15 @@ class PROXY_TEMPLATE__ReposeProxy__ extends PROXY_TEMPLATE implements repose_IPr
     public function ___repose_isDeleted() {
         return $this->___repose_isDeleted;
     }
-
+    
+    /**
+     * Is really deleted?
+     * @return bool
+     */
+    public function ___repose_isReallyDeleted() {
+        return $this->___repose_isReallyDeleted;
+    }
+    
     /**
      * A mapped class
      * @param string $clazz Class
@@ -245,6 +277,30 @@ class PROXY_TEMPLATE__ReposeProxy__ extends PROXY_TEMPLATE implements repose_IPr
             }
         }
     }
+    
+    /**
+     * Import a collection property?
+     * @param repose_MappedClassProperty $property Property
+     * @param mixed $objects
+     */
+    public function ___repose_mergeCollection($property, $objects) {
+        echo ' aaa ' . "\n";
+        $collection = $this->___repose_propertyGetter($property->name());
+        if ( ! $collection instanceof repose_ICollection ) {
+            $this->___repose_propertySetter($property->name(), new repose_ArrayCollection(
+                $this->___repose_session(),
+                $this->___repose_instanceCache(),
+                $this,
+                $property,
+                array_merge($collection, $objects)
+            ));
+            
+        } else {
+            $collection->___repose_fakeIsQueried();
+            foreach ( $objects as $object ) $collection[] = $object;
+        }
+        echo ' bbb ' . "\n";
+    }
 
     /**
      * Is we dirty?
@@ -276,7 +332,7 @@ class PROXY_TEMPLATE__ReposeProxy__ extends PROXY_TEMPLATE implements repose_IPr
                         $this->___repose_propertySetter($name, $value);
                     }
                     if ( ! $value->___repose_isPersisted() ) {
-                        $value->___repose_persist();
+                        //$value->___repose_persist();
                     } elseif ( $value->___repose_isDirty() ) {
                         $value->___repose_flush();
                     }
@@ -309,6 +365,7 @@ class PROXY_TEMPLATE__ReposeProxy__ extends PROXY_TEMPLATE implements repose_IPr
                 $newId = $this->___repose_session()->engine()->delete($this->___repose_session(), $this);
                 $this->___repose_isPersisted = false;
             }
+            $this->___repose_isReallyDeleted = true;
         } elseif ( ! $this->___repose_isPersisted ) {
 
             //
@@ -316,16 +373,36 @@ class PROXY_TEMPLATE__ReposeProxy__ extends PROXY_TEMPLATE implements repose_IPr
             // to do so now. 
             //
 
+            $clazz = $this->___repose_clazz;
+            $primaryKey = $this->___repose_session()->getPrimaryKey($this->___repose_clazz);
+            $primaryKeyProperty = $primaryKey->isComposite() ? null : $primaryKey->property();
+
+            if ( $primaryKeyProperty !== null ) {
+                $name = $primaryKeyProperty->name();
+                if ( $primaryKeyProperty->generator()->shouldGenerateBeforePersist() ) {
+                    $this->___repose_propertySetter($name, $primaryKeyProperty->generator()->generate(
+                        $this->___repose_session(),
+                        $this->___repose_mappedClass(),
+                        $primaryKeyProperty,
+                        $this
+                    ));
+                }
+            }
+            
             // Persist this proxy in our engine.
             $newId = $this->___repose_session()->engine()->persist($this->___repose_session(), $this);
 
-            $clazz = $this->___repose_clazz;
-            $primaryKey = $this->___repose_session()->getPrimaryKey($this->___repose_clazz);
-
-            if ( ! $primaryKey->isComposite() ) {
-                $primaryKeyProperty = $primaryKey->property();
+            if ( $primaryKeyProperty !== null ) {
                 $name = $primaryKeyProperty->name();
-                $this->___repose_propertySetter($name, $newId);
+                if ( $primaryKeyProperty->generator()->shouldGenerateAfterPersist() ) {
+                    $this->___repose_propertySetter($name, $primaryKeyProperty->generator()->generate(
+                        $this->___repose_session(),
+                        $this->___repose_mappedClass(),
+                        $primaryKeyProperty,
+                        $this,
+                        $newId
+                    ));
+                }
             }
 
             // And now we know...

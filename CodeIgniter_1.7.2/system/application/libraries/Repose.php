@@ -56,8 +56,6 @@ class Repose extends repose_AbstractSessionFactory {
         
         $CI =& get_instance();
         
-        $CI->load->database();
-        
         $config = $CI->config;
         
         $config->load('repose');
@@ -68,7 +66,23 @@ class Repose extends repose_AbstractSessionFactory {
             $config->set_item('repose_model_libs', APPPATH . 'repose-models');
         }
         
-        $this->engine = new repose_ci_DbEngine($CI->db);
+        if ( $config->item('repose_pdo_connection') ) {
+            $dataSourceConfig = $config->item('repose_pdo_connection');
+            require_once('repose_PdoEngine.php');
+            $pdo = new PDO(
+                $dataSourceConfig['dsn'],
+                $dataSourceConfig['username'],
+                $dataSourceConfig['password']
+            );
+            $pdo->setAttribute(
+                PDO::ATTR_ERRMODE,
+                PDO::ERRMODE_EXCEPTION
+            );
+            $this->engine = new repose_PdoEngine($pdo);
+        } else {
+            $CI->load->database();
+            $this->engine = new repose_ci_DbEngine($CI->db);
+        }
         $this->mapping = new repose_Mapping();
         $this->autoloader = new repose_PathAutoloader($config->item('repose_model_libs'));
         

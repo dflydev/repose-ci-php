@@ -81,7 +81,7 @@ class repose_ArrayCollection implements repose_ICollection, ArrayAccess, Iterato
 
         $this->___repose_queryString =
             'FROM ' . $property->className() .  ' __rc__ ' .
-            'WHERE __rc__.' . $property->backref() . ' = :__rc_backref__';
+            'WHERE __rc__.' . $property->backref($session->mapping()) . ' = :__rc_backref__';
 
         if ( ! is_null($data) and is_array($data) ) {
             foreach ( $data as $item ) {
@@ -89,21 +89,6 @@ class repose_ArrayCollection implements repose_ICollection, ArrayAccess, Iterato
             }
         }
 
-    }
-
-    public function ___test() {
-        print " [ testing! ]\n";
-        print_r($this->___repose_proxy()->___repose_primaryKeyData());
-        print " [ mor testin g]\n";
-        $results = $this->___repose_session()->execute(
-            $this->___repose_queryString,
-            array('__rc_backref__' => $this->___repose_proxy())
-        );
-        print_r($results);
-        print " [ done testing ]\n";
-        foreach ( $results->all() as $row ) {
-            print $row->title . "\n";
-        }
     }
 
     /**
@@ -158,6 +143,10 @@ class repose_ArrayCollection implements repose_ICollection, ArrayAccess, Iterato
             $this->___repose_isQueried = true;
         }
     }
+    
+    public function ___repose_fakeIsQueried() {
+        $this->___repose_isQueried = true;
+    }
 
     public function offsetSet($offset,$value) {
         // TODO Determine if we actually want to ping the database when
@@ -187,7 +176,7 @@ class repose_ArrayCollection implements repose_ICollection, ArrayAccess, Iterato
                 $this->___repose_session()->delete($value);
             } else {
                 $value->___repose_propertySetter(
-                    $this->___repose_property->backref(),
+                    $this->___repose_property->backref($this->___repose_session()->mapping()),
                     null
                 );
             }
